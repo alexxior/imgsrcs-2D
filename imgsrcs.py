@@ -196,18 +196,20 @@ def cal_dist_from_srcs_to_rec(srcs_list:List[Room], rec_point:Point): #lista wsz
         dists_and_alfas_for_all.append(dist_and_alfas)
     return dists_and_alfas_for_all
 
-def cal_sum_intensity(Q, m, dists_and_alfas, coefs):
+def cal_sum_intensity(spl, m, dists_and_alfas, coefs):
+    Q = 20e-5*10**(spl/20)
     I = 0
     for i in dists_and_alfas:
         Itemp = Q/(4*math.pi*i[0]**2)*math.exp(-m*i[0])
         for j in range(3):
             Itemp *= (1-coefs[j])**i[j+1]
         I += Itemp
-    return I
+    return 10*math.log10(I/10**(-12))
 
-def cal_echogram_and_plot(Q, m, dists_and_alfas, coefs):
+def cal_echogram_and_plot(spl, m, dists_and_alfas, coefs):
     dists_and_alfas.sort(key=lambda d: d[0])
     c = 343 #speed of sound in normal conditions
+    Q = 10**(0.2*spl)
     dt_amps = np.array([0,0])
     for d in dists_and_alfas:
         amplitude = Q/(4*math.pi*d[0]**2)*math.exp(-m*d[0])
@@ -224,7 +226,7 @@ def cal_echogram_and_plot(Q, m, dists_and_alfas, coefs):
     plt.ylim(bottom=0)
     return dt_amps
 
-def schroeder_integral(dt_amps):
+def schroeder_integral(dt_amps: np.ndarray):
     # zakładając, że jest impuls jest fizyczną deltą diraca
     # całka jest skokiem jednostkowym przeskalowanym o amplitudę
     # a energia całkowita jest sumą kwadratów amplitud
@@ -233,7 +235,7 @@ def schroeder_integral(dt_amps):
     tot_energy = 0
     for a in amps:
         tot_energy += a**2
-    
+
     schr_int = np.array([0,0])
     for i in range(len(dt)-1):
         inverse_int = 0
@@ -255,51 +257,107 @@ def linear_regression(x,y):
     b = (np.sum(y) - m *np.sum(x)) / len(x)
     return [m,b]
 
-def getT20_T30_T60(schr_int: np.ndarray):
+def get_EDT_T20_T30_T60(schr_int: np.ndarray):
     dt, energies = schr_int.T
-    list_t20_t30_t60=[]
+    list_params = []
+    # EDT calc:
     if np.min(energies) <= -10:
-        indexesEDT=np.where(energies>=-10) 
-        EDT_energies=energies[indexesEDT]
-        EDT_dt=dt[indexesEDT]
-        
-        linEDT=linear_regression(EDT_dt,EDT_energies)
-        t0=(0-linEDT[1])/linEDT[0]
-        t1=(-10-linEDT[1])/linEDT[0]
-        dtEDT=t1-t0
-        print("EDT = ","%.3f" % dtEDT*6)
-        list_t20_t30_t60.append(dtEDT*6)
+        indexesEDT = np.where(energies>=-10) 
+        EDT_energies = energies[indexesEDT]
+        EDT_dt = dt[indexesEDT]
+        linEDT = linear_regression(EDT_dt,EDT_energies)
+        t0 = (0-linEDT[1])/linEDT[0]
+        t1 = (-10-linEDT[1])/linEDT[0]
+        edt = 6*(t1-t0)
+        print("EDT =","%.3f" % edt, 's')
+        list_params.append(edt)
+    else:
+        print('Cannot calc EDT!')
+        list_params.append('-')
+    # T20 calc:
     if np.min(energies) <= -25:
-        indexesT20=np.where(np.logical_and(energies<-5,energies>=-25))     
-        t20_energies=energies[indexesT20]
-        t20_dt=dt[indexesT20]
-
-        lin20=linear_regression(t20_dt,t20_energies)
-        t0=(-5-lin20[1])/lin20[0]
-        t1=(-25-lin20[1])/lin20[0]
-        dt20=t1-t0
-        print("T20 = ","%.3f" % dt20*3)
-        list_t20_t30_t60.append(dt20*3)
+        indexesT20 = np.where(np.logical_and(energies<-5,energies>=-25))     
+        t20_energies = energies[indexesT20]
+        t20_dt = dt[indexesT20]
+        lin20 = linear_regression(t20_dt,t20_energies)
+        t0 = (-5-lin20[1])/lin20[0]
+        t1 = (-25-lin20[1])/lin20[0]
+        t20 = 3*(t1-t0)
+        print("T20 =","%.3f" % t20, 's')
+        list_params.append(t20)
+    else:
+        print('Cannot calc T20!')
+        list_params.append('-')
+    # T30 calc:
     if np.min(energies) <= -35:
-        indexesT30=np.where(np.logical_and(energies<-5, energies>-35))
-        t30_energies=energies[indexesT30]
-        t30_dt=dt[indexesT30]
-
-        lin30=linear_regression(t30_dt,t30_energies)
-        t0=(-5-lin20[1])/lin30[0]
-        t1=(-35-lin20[1])/lin30[0]
-        dt30=t1-t0
-        print("T30 = ","%.3f" % dt30*2)
-        list_t20_t30_t60.append(dt30*2)
+        indexesT30 = np.where(np.logical_and(energies<-5, energies>-35))
+        t30_energies = energies[indexesT30]
+        t30_dt = dt[indexesT30]
+        lin30 = linear_regression(t30_dt,t30_energies)
+        t0 = (-5-lin20[1])/lin30[0]
+        t1 = (-35-lin20[1])/lin30[0]
+        t30 = 2*(t1-t0)
+        print("T30 =","%.3f" % t30, 's')
+        list_params.append(t30)
+    else:
+        print('Cannot calc T30!')
+        list_params.append('-')
+    # T60 calc:
     if np.min(energies) <= -65:
-        indexesT60=np.where(np.logical_and(energies<-5, energies>-65))
-        t60_energies=energies[indexesT60]
-        t60_dt=dt[indexesT60]
+        indexesT60 = np.where(np.logical_and(energies<-5, energies>-65))
+        t60_energies = energies[indexesT60]
+        t60_dt = dt[indexesT60]
+        lin60 = linear_regression(t60_dt,t60_energies)
+        t0 = (-5-lin60[1])/lin60[0]
+        t1 = (-65-lin60[1])/lin60[0]
+        t60 = t1-t0
+        print("T60 =","%.3f" % t60, 's')
+        list_params.append(t60)
+    else:
+        print('Cannot cal T60!')
+        list_params.append('-')
+    return list_params
 
-        lin60=linear_regression(t60_dt,t60_energies)
-        t0=(-5-lin60[1])/lin60[0]
-        t1=(-65-lin60[1])/lin60[0]
-        dt60=t1-t0
-        print("T60 = ","%.3f" % dt60)
-        list_t20_t30_t60.append(dt60)
-    return list_t20_t30_t60
+def get_C50_C80_D50_D80(dt_amps: np.ndarray, list_params: List):
+    dt, amps = dt_amps.T
+    # C50 calc:
+    c50_early_energy = i = 0
+    while dt[i] <= 0.05:
+        c50_early_energy += amps[i]**2
+        i += 1
+    c50_late_energy = 0
+    while i < len(dt):
+        c50_late_energy += amps[i]**2
+        i += 1
+    c50 = 10*math.log10(c50_early_energy/c50_late_energy)
+    print("C50 =","%.3f" % c50, 'dB')
+    # C80 calc:
+    c80_early_energy = i = 0
+    while dt[i] <= 0.08:
+        c80_early_energy += amps[i]**2
+        i += 1
+    c80_late_energy = 0
+    while i < len(dt):
+        c80_late_energy += amps[i]**2
+        i += 1
+    c80 = 10*math.log10(c80_early_energy/c80_late_energy)
+    print("C80 =","%.3f" % c80, 'dB')
+    # D50 calc:
+    tot_energy = 0
+    for a in amps:
+        tot_energy += a**2
+    d50_early_energy = i = 0
+    while dt[i] <= 0.05:
+        d50_early_energy += amps[i]**2
+        i += 1
+    d50 = 100*d50_early_energy/tot_energy
+    print("D50 =","%.3f" % d50, '%')
+    # D80 calc:
+    d80_early_energy = i = 0
+    while dt[i] <= 0.08:
+        d80_early_energy += amps[i]**2
+        i += 1
+    d80 = 100*d80_early_energy/tot_energy
+    print("D80 =","%.3f" % d80, '%')
+    list_params.extend([c50, c80, d50, d80])
+    return list_params
