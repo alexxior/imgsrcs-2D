@@ -209,7 +209,7 @@ def cal_sum_intensity(spl, m, dists_and_alfas, coefs):
 def cal_echogram_and_plot(spl, m, dists_and_alfas, coefs):
     dists_and_alfas.sort(key=lambda d: d[0])
     c = 343 #speed of sound in normal conditions
-    Q = 10**(0.2*spl)
+    Q = 20e-5*10**(spl/20)
     dt_amps = np.array([0,0])
     for d in dists_and_alfas:
         amplitude = Q/(4*math.pi*d[0]**2)*math.exp(-m*d[0])
