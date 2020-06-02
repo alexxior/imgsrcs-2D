@@ -13,13 +13,13 @@ if __name__ == '__main__':
     dist_rec_from_left_wall = 0.5
     dist_rec_from_down_wall = 0.5
     # pogłowowe współczynniki pochłaniania w zakresie [0,1]
-    alfa1 = 0.1 # lewa
-    alfa2 = 0.2 # górna
+    alfa1 = 0.5 # lewa
+    alfa2 = 0.5 # górna
     alfa3 = 0.5 # prawa
-    alfa4 = 0.4 # dolna
+    alfa4 = 0.5 # dolna
     # parametry źródła wszechkierunkowego
     spl = 94 # poziom ciśnienia akustycznego na 1 m w dB, 
-    m = 0.1 # mocowy współczynnik tłumienia m, zgodnie z PN ISO 9613-1
+    m = 0.1  # mocowy współczynnik tłumienia m
     # ------------------
     # CZĘŚĆ OBLICZENIOWA
     if (dist_src_from_left_wall <= l and dist_src_from_down_wall <= w \

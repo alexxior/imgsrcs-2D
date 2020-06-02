@@ -197,7 +197,7 @@ def cal_dist_from_srcs_to_rec(srcs_list:List[Room], rec_point:Point): #lista wsz
     return dists_and_alfas_for_all
 
 def cal_sum_intensity(spl, m, dists_and_alfas, coefs):
-    Q = 20e-5*10**(spl/20)
+    Q = 2e-5*10**(spl/20)
     I = 0
     for i in dists_and_alfas:
         Itemp = Q/(4*math.pi*i[0]**2)*math.exp(-m*i[0])
@@ -209,7 +209,8 @@ def cal_sum_intensity(spl, m, dists_and_alfas, coefs):
 def cal_echogram_and_plot(spl, m, dists_and_alfas, coefs):
     dists_and_alfas.sort(key=lambda d: d[0])
     c = 343 #speed of sound in normal conditions
-    Q = 20e-5*10**(spl/20)
+    Z = 429 #characteristic impedance of air
+    Q = (2e-5**2)*(10**(spl/10))/Z
     dt_amps = np.array([0,0])
     for d in dists_and_alfas:
         amplitude = Q/(4*math.pi*d[0]**2)*math.exp(-m*d[0])
