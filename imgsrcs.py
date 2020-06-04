@@ -208,9 +208,9 @@ def cal_sum_intensity(spl, m, dists_and_alfas, coefs):
 
 def cal_echogram_and_plot(spl, m, dists_and_alfas, coefs):
     dists_and_alfas.sort(key=lambda d: d[0])
-    c = 343 #speed of sound in normal conditions
-    Z = 429 #characteristic impedance of air
-    Q = (2e-5**2)*(10**(spl/10))/Z
+    c = 343 # speed of sound in normal conditions
+    Z = 429 # characteristic impedance of air
+    Q = (2e-5**2)*(10**(spl/10))/Z # Imax = p^2/Z
     dt_amps = np.array([0,0])
     for d in dists_and_alfas:
         amplitude = Q/(4*math.pi*d[0]**2)*math.exp(-m*d[0])
@@ -218,11 +218,14 @@ def cal_echogram_and_plot(spl, m, dists_and_alfas, coefs):
             amplitude *= (1-coefs[i])**d[i+1]
         dt_amps = np.vstack((dt_amps,np.array([d[0]/c,amplitude])))
     dt, amps = dt_amps.T
+    spls = []
+    for i in range(len(amps)):
+        spls.append(10*np.log10(amps[i]*Z/(2e-5)**2))
     plt.figure()
-    plt.stem(dt,amps,use_line_collection=True)
+    plt.stem(dt,spls,use_line_collection=True)
     plt.title("Room Impulse Response (Echogram)")
     plt.xlabel("Time [s]")
-    plt.ylabel("Amplitude")
+    plt.ylabel("SPL [dB]")
     plt.xlim(left=0)
     plt.ylim(bottom=0)
     return dt_amps
