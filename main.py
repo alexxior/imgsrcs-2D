@@ -19,7 +19,8 @@ if __name__ == '__main__':
     alfa4 = 0.4 # dolna
     # parametry źródła wszechkierunkowego
     spl = 94 # poziom ciśnienia akustycznego na 1 m w dB, 
-    m = 0.1  # mocowy współczynnik tłumienia m
+    m = 10e-12*10**(0.5*10e-3/10) # średni mocowy współczynnik tłumienia m [W/m]
+    print("Power damping factor of air [W/m]: %f" % m)
     # ------------------
     # CZĘŚĆ OBLICZENIOWA
     if (dist_src_from_left_wall <= l and dist_src_from_down_wall <= w \
