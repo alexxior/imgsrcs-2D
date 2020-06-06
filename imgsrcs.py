@@ -220,8 +220,8 @@ def cal_echogram_and_plot(spl, m, dists_and_alfas, coefs):
         dt_amps = np.vstack((dt_amps,np.array([d[0]/c,amplitude])))
     dt, amps = dt_amps.T
     spls = []
-    for i in range(len(amps)):
-        spls.append(10*np.log10(amps[i]*Z/(2e-5)**2))
+    for amp in amps:
+        spls.append(10*np.log10(amp*Z/(2e-5)**2))
     plt.figure()
     plt.stem(dt,spls,use_line_collection=True)
     plt.title("Room Impulse Response (Echogram)")
